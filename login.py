@@ -178,7 +178,7 @@ class Spider:
 
 
 	def get_page(self,name):
-		while True:
+		for i in range(0,3):
 			data = {
 			'xh': self.__uid,
 			'xm': parse.quote(name.encode('gb2312')),
@@ -215,7 +215,7 @@ class Spider:
 			get_score =  get_score.content.decode('gb2312')
 			soup2 = BeautifulSoup(get_score,'lxml')
 			base64 = self.__set__VIEWSTATE(soup2)
-		return base64
+			return base64
 
 class Parse:
 	def __init__(self,data):
@@ -246,6 +246,7 @@ class Parse:
 		fout.write("</body>")
 		fout.write("</html>")
 		fout.close()
+		print("generate done!")
 
 	def get_grades(self):
 		p1 = re.compile(r';l<(.*?);>>;>;;>;', re.S)
@@ -258,41 +259,47 @@ class Parse:
 		data4 = data3[8:-2]
 		while "理论课" in data4:
 			data4.remove("理论课")
-
 		for i in range(len(data4)):
-
 			if ((data4[i]=="体育军事教学部") or (data4[i]=="教务处") or(data4[i] == "大学外语教学部")):
 				data4[i] = data4[i-1]
-
 			data4[i] = data4[i].lstrip()
 			if (i+2<=len(data4)):
 				if ((data4[i]=="素质教育选修课") & (data4[i+1]=="素质教育选修课")):
 					data4.remove(data4[i])
-			# print(data4[i] + '\t\t',end='')
-
+			#print(data4[i] + '\t\t',end='')
 			if i+1==len(data4):
 				break
 			# if data4[i+1][0]>='A' and data4[i+1][0] <= 'Z' and data4[i+1][2].isdigit():
-				# print("\n")
+			# 	print("\n")
 		pattern4 = re.compile(r'\d[.]\d')
 		data5 = []
 		for i in range(len(data4)):
-			if i+4==len(data4):
+			if i+4 == len(data4):
 				break
-			if data4[i][0]>='A' and data4[i][0] <= 'Z' and data4[i][2].isdigit():
+			if data4[i][0] >= 'A' and data4[i][0] <= 'Z' and data4[i][2].isdigit():
 				data5.append(data4[i+1])
-			if ((pattern4.match(data4[i]) != None) & (pattern4.match(data4[i+1]) != None )):
+			if ((pattern4.match(data4[i]) != None) & (pattern4.match(data4[i+1]) != None)):
 				data5.append(data4[i+2])
 				data5.append(data4[i+3])
 				data5.append(data4[i+4])
-				# print(data4[i+2],data4[i+3],data4[i+4],"\n")
+			if((pattern4.match(data4[i-1]) == None) &(pattern4.match(data4[i]) != None) & (pattern4.match(data4[i+1]) == None)):
+				data5.append(data4[i+1])
+				j = 0
+				while (True):
+					if i+j == len(data4):
+						break
+					if (data4[i+j][0] >= 'A' and data4[i+j][0] <= 'Z' and data4[i+j][2].isdigit()) == False:
+						j = j + 1
+					else:
+						break
+				data5.append(data4[i+j-4])
+				data5.append(data4[i+j-3])
+				#print(data4[i+2],data4[i+3],data4[i+4],"\n")
 		data = []
 		form = {}
 		for i in range(1,int(len(data5)/4)+1):
 			data.append({'课程':data5[(i-1)*4],'平时成绩':data5[(i-1)*4+1],'考试成绩':data5[(i-1)*4+2],'最终成绩':data5[(i-1)*4+3]})
-
-		self.output_html(data)
-
+		return(data)
 
 
 if __name__ == '__main__':
